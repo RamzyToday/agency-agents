@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Focus",
+    "slug": "adhd-productivity",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0F1117"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.yourname.focus",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Focus needs mic access to capture tasks by voice."
+      }
+    },
+    "android": {
+      "package": "com.yourname.focus",
+      "permissions": ["RECORD_AUDIO", "RECEIVE_BOOT_COMPLETED", "SCHEDULE_EXACT_ALARM"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-av",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#6366F1"
+        }
+      ]
+    ],
+    "scheme": "focus"
+  }
+}
