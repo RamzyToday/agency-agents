@@ -46,6 +46,11 @@ export function TaskCard({ task, onComplete, onDelete, showQuadrant = false }: P
               <Text style={styles.chipTextMuted}>{task.effortMinutes}m</Text>
             </View>
           )}
+          {task.googleEventId && (
+            <View style={styles.chip}>
+              <Text style={styles.chipCal}>📅 On calendar</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -108,6 +113,10 @@ const styles = StyleSheet.create({
   },
   chipTextMuted: {
     color: Colors.textSecondary,
+    fontSize: 12,
+  },
+  chipCal: {
+    color: Colors.schedule,
     fontSize: 12,
   },
   deleteBtn: {

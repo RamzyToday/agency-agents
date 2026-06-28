@@ -11,6 +11,7 @@ export interface Task {
   createdAt: string;
   completedAt?: string;
   notes?: string;
+  googleEventId?: string;  // set when a calendar event is linked
 }
 
 export interface IntakeMessage {

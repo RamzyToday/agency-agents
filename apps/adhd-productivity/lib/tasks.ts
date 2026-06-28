@@ -52,3 +52,7 @@ export async function getDoFirstTasks(): Promise<Task[]> {
   const tasks = await getActiveTasks();
   return tasks.filter((t) => t.quadrant === 'do-first').slice(0, 3);
 }
+
+export async function attachGoogleEvent(taskId: string, googleEventId: string): Promise<void> {
+  await updateTask(taskId, { googleEventId });
+}

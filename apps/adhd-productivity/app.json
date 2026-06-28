@@ -23,6 +23,7 @@
     "plugins": [
       "expo-router",
       "expo-av",
+      "expo-secure-store",
       [
         "expo-notifications",
         {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { IntakeChat } from '@/components/IntakeChat';
+import { CalendarBlockSheet } from '@/components/CalendarBlockSheet';
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder';
 import { useIntake } from '@/hooks/useIntake';
+import { attachGoogleEvent } from '@/lib/tasks';
+import { Task } from '@/lib/types';
 
 type CaptureMode = 'idle' | 'intake';
 
@@ -23,12 +26,20 @@ export default function CaptureScreen() {
   const router = useRouter();
   const [mode, setMode] = useState<CaptureMode>('idle');
   const [textInput, setTextInput] = useState('');
+  const [calendarTask, setCalendarTask] = useState<Task | null>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
 
-  const intake = useIntake(() => {
-    setTimeout(() => {
+  const handleIntakeDone = useCallback((task: Task) => {
+    if (task.quadrant === 'schedule') {
+      // Offer calendar blocking for "schedule" tasks
+      setCalendarTask(task);
+      setShowCalendar(true);
+    } else {
       router.replace('/');
-    }, 1800);
-  });
+    }
+  }, [router]);
+
+  const intake = useIntake(handleIntakeDone);
 
   const voice = useVoiceRecorder((transcribed) => {
     setMode('intake');
@@ -46,8 +57,22 @@ export default function CaptureScreen() {
   const reset = () => {
     setMode('idle');
     setTextInput('');
+    setCalendarTask(null);
+    setShowCalendar(false);
     intake.reset();
     voice.reset();
+  };
+
+  const handleCalendarScheduled = async (eventId: string) => {
+    if (calendarTask) {
+      await attachGoogleEvent(calendarTask.id, eventId);
+    }
+    router.replace('/');
+  };
+
+  const handleCalendarSkip = () => {
+    setShowCalendar(false);
+    router.replace('/');
   };
 
   return (
@@ -76,26 +101,21 @@ export default function CaptureScreen() {
             <Text style={styles.idlePrompt}>What's on your mind?</Text>
             <Text style={styles.idleSub}>Speak or type — I'll help you prioritize it.</Text>
 
-            {/* Voice capture */}
             <View style={styles.voiceArea}>
               <VoiceRecorder
                 state={voice.state}
                 onStart={voice.startRecording}
                 onStop={voice.stopRecording}
               />
-              {voice.error && (
-                <Text style={styles.voiceError}>{voice.error}</Text>
-              )}
+              {voice.error && <Text style={styles.voiceError}>{voice.error}</Text>}
             </View>
 
-            {/* Divider */}
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>or type it</Text>
               <View style={styles.dividerLine} />
             </View>
 
-            {/* Text input */}
             <View style={styles.textRow}>
               <TextInput
                 style={styles.textInput}
@@ -129,6 +149,14 @@ export default function CaptureScreen() {
           />
         )}
       </KeyboardAvoidingView>
+
+      {/* Calendar block sheet — slides up after a "schedule" task is saved */}
+      <CalendarBlockSheet
+        visible={showCalendar}
+        task={calendarTask}
+        onClose={handleCalendarSkip}
+        onScheduled={handleCalendarScheduled}
+      />
     </SafeAreaView>
   );
 }
@@ -160,11 +188,7 @@ const styles = StyleSheet.create({
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.border },
   dividerText: { color: Colors.textMuted, fontSize: 12 },
-  textRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 10,
-  },
+  textRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
   textInput: {
     flex: 1,
     backgroundColor: Colors.surface,
