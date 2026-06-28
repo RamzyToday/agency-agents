@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Task } from '@/lib/types';
 import { loadTasks, completeTask, deleteTask } from '@/lib/tasks';
+import { syncTaskCompletion } from '@/lib/notion-sync';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -22,7 +23,8 @@ export function useTasks() {
 
   const markComplete = useCallback(
     async (id: string) => {
-      await completeTask(id);
+      const task = await completeTask(id);
+      if (task) syncTaskCompletion(task);
       await refresh();
     },
     [refresh]

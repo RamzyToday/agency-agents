@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { IntakeMessage, ExtractedTask, Task } from '@/lib/types';
 import { startIntake, sendIntakeMessage, parseTaskFromResponse, stripTaskBlock } from '@/lib/claude';
 import { createTask } from '@/lib/tasks';
+import { syncNewTask } from '@/lib/notion-sync';
 
 type IntakeState = 'idle' | 'thinking' | 'active' | 'saving' | 'done' | 'error';
 
@@ -18,6 +19,8 @@ export function useIntake(onDone: (task: Task) => void) {
       setState('saving');
       const task = await createTask(extracted);
       setSavedTask(task);
+      // Fire-and-forget Notion sync — never blocks the UI
+      syncNewTask(task);
       setState('done');
       setTimeout(() => onDone(task), 1500);
     },

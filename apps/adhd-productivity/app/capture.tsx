@@ -17,8 +17,11 @@ import { IntakeChat } from '@/components/IntakeChat';
 import { CalendarBlockSheet } from '@/components/CalendarBlockSheet';
 import { useVoiceRecorder } from '@/hooks/useVoiceRecorder';
 import { useIntake } from '@/hooks/useIntake';
+import { isGoogleConfigured } from '@/hooks/useGoogleCalendar';
 import { attachGoogleEvent } from '@/lib/tasks';
 import { Task } from '@/lib/types';
+
+const GOOGLE_ENABLED = isGoogleConfigured();
 
 type CaptureMode = 'idle' | 'intake';
 
@@ -30,8 +33,7 @@ export default function CaptureScreen() {
   const [showCalendar, setShowCalendar] = useState(false);
 
   const handleIntakeDone = useCallback((task: Task) => {
-    if (task.quadrant === 'schedule') {
-      // Offer calendar blocking for "schedule" tasks
+    if (task.quadrant === 'schedule' && GOOGLE_ENABLED) {
       setCalendarTask(task);
       setShowCalendar(true);
     } else {
@@ -150,13 +152,15 @@ export default function CaptureScreen() {
         )}
       </KeyboardAvoidingView>
 
-      {/* Calendar block sheet — slides up after a "schedule" task is saved */}
-      <CalendarBlockSheet
-        visible={showCalendar}
-        task={calendarTask}
-        onClose={handleCalendarSkip}
-        onScheduled={handleCalendarScheduled}
-      />
+      {/* Only rendered when Google Calendar credentials are configured */}
+      {GOOGLE_ENABLED && (
+        <CalendarBlockSheet
+          visible={showCalendar}
+          task={calendarTask}
+          onClose={handleCalendarSkip}
+          onScheduled={handleCalendarScheduled}
+        />
+      )}
     </SafeAreaView>
   );
 }
