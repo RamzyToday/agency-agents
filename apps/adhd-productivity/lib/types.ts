@@ -12,6 +12,7 @@ export interface Task {
   completedAt?: string;
   notes?: string;
   googleEventId?: string;  // set when a calendar event is linked
+  notionPageId?: string;   // set when synced to Notion
 }
 
 export interface IntakeMessage {

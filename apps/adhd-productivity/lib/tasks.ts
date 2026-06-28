@@ -21,16 +21,24 @@ export async function createTask(extracted: ExtractedTask): Promise<Task> {
     createdAt: new Date().toISOString(),
   };
   await saveTasks([...tasks, task]);
+
+  // Fire-and-forget — import lazily to avoid circular deps at module load time
+  import('./notion-sync').then(({ syncNewTask }) => syncNewTask(task));
+
   return task;
 }
 
 export async function completeTask(id: string): Promise<void> {
   const tasks = await loadTasks();
-  await saveTasks(
-    tasks.map((t) =>
-      t.id === id ? { ...t, isCompleted: true, completedAt: new Date().toISOString() } : t
-    )
+  const updated = tasks.map((t) =>
+    t.id === id ? { ...t, isCompleted: true, completedAt: new Date().toISOString() } : t
   );
+  await saveTasks(updated);
+
+  const task = updated.find((t) => t.id === id);
+  if (task) {
+    import('./notion-sync').then(({ syncTaskCompletion }) => syncTaskCompletion(task));
+  }
 }
 
 export async function deleteTask(id: string): Promise<void> {
@@ -55,4 +63,8 @@ export async function getDoFirstTasks(): Promise<Task[]> {
 
 export async function attachGoogleEvent(taskId: string, googleEventId: string): Promise<void> {
   await updateTask(taskId, { googleEventId });
+}
+
+export async function attachNotionPage(taskId: string, notionPageId: string): Promise<void> {
+  await updateTask(taskId, { notionPageId });
 }
